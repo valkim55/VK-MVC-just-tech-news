@@ -49,6 +49,7 @@ router.put('/:id', (req, res) => {
     // expected {username: 'potato', email: 'potato@gmail.com', password: 'potato123'} same as UPDATE users SET username='potato', email = 'potato@gmail.com', password = 'potato123' WHERE id=?;
     // if req.body has exact key/value pairs to match the model, you can just use 'req.body' 
     User.update(req.body, {
+        individualHooks: true,
         where: { id: req.params.id }
     }).then(dbUserData => {
         if(!dbUserData[0]) {
@@ -62,6 +63,25 @@ router.put('/:id', (req, res) => {
     });
 });
 
+// ===== LOGIN ROUT =====
+router.post('/login', (req, res) => {
+    User.findOne({
+        where: {
+            email: req.body.email
+        }
+    }).then(dbUserData => {
+        if(!dbUserData) {
+            res.status(400).json({message: 'no user found with this email'});
+            return;
+        }
+        const validPassword = dbUserData.checkPassword(req.body.password);
+        if(!validPassword) {
+            res.status(400).json({message: 'incorrect password!'});
+            return;
+        }
+        res.json({user: dbUserData, message: 'you qre now logged in!'});
+    });
+});
 
 // ===== DELETE a user=> /api/users/id =====
 router.delete('/:id', (req, res) => {

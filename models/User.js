@@ -1,8 +1,14 @@
+
 const {Model, DataTypes} = require('sequelize');
 const sequelize = require('../config/connection');
+const bcrypt = require('bcrypt');
 
 //create a User model (User table)
-class User extends Model {}
+class User extends Model {
+    checkPassword(loginPw) {
+        return bcrypt.compareSync(loginPw, this.password);
+    }
+}
 
 //define table columns and configuration
 User.init(
@@ -32,8 +38,22 @@ User.init(
             allowNull: false,
             validate: { len: [4] }  //means the password has to be at least 4 chars long
             }
-    },
+    },   
     {
+        hooks: {
+            // setup beforeCreate() since we need to do this before User instance with its password is crated
+            async beforeCreate(newUserData) {
+                newUserData.password = await bcrypt.hash(newUserData.password, 10);
+                return newUserData;
+            },
+
+            // setup beforeUpdate() hook
+            async beforeUpdate(updatedUserData) {
+                updatedUserData.password = await bcrypt.hash(updatedUserData.password, 10);
+                return updatedUserData;
+            }
+        },
+
         // table config options: 
         sequelize, //pass in imported sequelize connection (the direct connection to the database)
         timestamps: false, // don't automatically create createdAT/updatedAt timestamp fields
