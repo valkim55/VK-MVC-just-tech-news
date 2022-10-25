@@ -1,11 +1,19 @@
 const router = require('express').Router();
-const {Post, User} = require('../../models');
+const { json } = require('sequelize');
+const {Post, User, Vote} = require('../../models');
+
+// importing database connection to get special functionality for PUT vote request
+const sequelize = require('../../config/connection');
 
 
 // ===== GET all posts =====
 router.get('/', (req, res) => {
     Post.findAll({
-        attributes: ['id', 'post_url', 'title', 'created_at'],
+        attributes: ['id', 'post_url', 'title', 'created_at',
+                        // add a SQL query to include the total vote count for a post AS vote_count
+                        [ sequelize.literal('(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)'), 'vote_count' ]
+                    ],
+
         // does ORDER BY the data of creation so the newest posts will be at the top
         order: [ ['created_at', 'DESC'] ],
         include: [ { model: User, attributes: ['username'] } ] //JOIN
@@ -23,7 +31,10 @@ router.get('/:id', (req, res) => {
         where: {
             id: req.params.id
         },
-        attribute: ['id', 'post_url', 'title', 'created_at'],
+        attributes: ['id', 'post_url', 'title', 'created_at',
+                        // add a SQL query to include the total vote count for a post AS vote_count
+                        [ sequelize.literal('(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)'), 'vote_count' ]
+                    ],
         include: [ { model: User, attributes: ['username'] } ]
     }).then(dbPostData => {
         if(!dbPostData) {
@@ -49,6 +60,22 @@ router.post('/', (req, res) => {
         res.status(500).json(err);
       });
 });
+
+
+// ===== another PUT route for adding a vote! =====
+// HAS TO BE DEFINED BEFORE /:id SO EXPRESS DOESN'T THINK THAT THIS IS A PART OF /:id ROUTE!
+// to simplify the code here we created a model method in Post class
+router.put('/upvote', (req, res) => {
+    Post.upvote(req.body, { Vote })
+        .then(updatedPostData => {
+            return res.json(updatedPostData)
+        }).catch(err => {
+            console.log(err);
+            res.status(500).json(err);
+        });
+});
+
+
 
 // ===== UPDATE a post's title =====
 router.put('/:id', (req, res) => {
@@ -87,7 +114,6 @@ router.delete('/:id', (req, res) => {
         res.status(500).json(err);
     });
 });
-
 
 
 
