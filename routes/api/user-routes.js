@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const {User, Post, Vote} = require('../../models');
+const {User, Post, Vote, Comment} = require('../../models');
 
 // ===== GET all users => /api/users =====
 router.get('/', (req, res) => {
@@ -15,6 +15,7 @@ router.get('/', (req, res) => {
 // ===== GET a single user => /api/users/id =====
 router.get('/:id', (req, res) => {
     User.findOne({
+        attributes: { exclude: ['password'] },
         where: {
             id: req.params.id // SELECT * FROM users WHERE id=?;
         }, 
@@ -22,6 +23,11 @@ router.get('/:id', (req, res) => {
             {
                 model: Post,
                 attributes: ['id', 'title', 'post_url', 'created_at']
+            },
+            {
+                model: Comment,
+                attributes: ['id', 'comment_text', 'created_at'],
+                include: { model: Post, attributes: ['title'] }     // JOIN - includes Comment model that includes Post model so you can see on which post this user commented
             },
             {
                 model: Post,

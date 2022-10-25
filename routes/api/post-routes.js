@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const { json } = require('sequelize');
-const {Post, User, Vote} = require('../../models');
+const {Post, User, Vote, Comment} = require('../../models');
 
 // importing database connection to get special functionality for PUT vote request
 const sequelize = require('../../config/connection');
@@ -9,14 +9,20 @@ const sequelize = require('../../config/connection');
 // ===== GET all posts =====
 router.get('/', (req, res) => {
     Post.findAll({
+        // does ORDER BY the data of creation so the newest posts will be at the top
+        order: [ ['created_at', 'DESC'] ],
         attributes: ['id', 'post_url', 'title', 'created_at',
                         // add a SQL query to include the total vote count for a post AS vote_count
                         [ sequelize.literal('(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)'), 'vote_count' ]
                     ],
-
-        // does ORDER BY the data of creation so the newest posts will be at the top
-        order: [ ['created_at', 'DESC'] ],
-        include: [ { model: User, attributes: ['username'] } ] //JOIN
+        include: [ 
+            // JOIN - will include the Comment model that includes User model to attach the username to the comment
+            {
+                model: Comment,
+                attributes: ['id', 'comment_text', 'post_id', 'user_id', 'created_at'],
+                include: { model: User, attributes: ['username'] }
+            },     
+            { model: User, attributes: ['username'] } ] //JOIN - includes User model to attach the username to the post itself
     }).then(dbPostData => {
         return res.json(dbPostData);
     }).catch(err => {
@@ -35,7 +41,14 @@ router.get('/:id', (req, res) => {
                         // add a SQL query to include the total vote count for a post AS vote_count
                         [ sequelize.literal('(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)'), 'vote_count' ]
                     ],
-        include: [ { model: User, attributes: ['username'] } ]
+        include: [ 
+            // JOIN - will include the Comment model that includes User model to attach the username to the comment
+            {
+                model: Comment,
+                attributes: ['id', 'comment_text', 'post_id', 'user_id', 'created_at'],
+                include: { model: User, attributes: ['username'] }
+            },  
+            { model: User, attributes: ['username'] } ]
     }).then(dbPostData => {
         if(!dbPostData) {
             res.status(400).json({message: 'no posts found with this id'});
