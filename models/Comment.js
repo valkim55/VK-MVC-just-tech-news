@@ -14,8 +14,9 @@ Comment.init(
             autoIncrement: true
         },
         comment_text: {
-            type: DataTypes.TEXT,
-            allowNull: false
+            type: DataTypes.STRING,
+            allowNull: false,
+            validate: {min: [1]}
         },
         user_id: {
             type: DataTypes.INTEGER,
