@@ -16,16 +16,19 @@ router.get('/', (req, res) => {
 
 // ===== POST a new comment =====
 router.post('/', (req, res) => {
-    Comment.create({
-        comment_text: req.body.comment_text,
-        user_id: req.body.user_id,
-        post_id: req.body.post_id
-    }).then(dbCommentData => {
-        return res.json(dbCommentData);
-    }).catch(err => {
-        console.log(err);
-        req.statusCode(400).json(err);
-    })
+    if(req.session) {   
+        Comment.create({
+            comment_text: req.body.comment_text,
+            // grab user_id from the session
+            user_id: req.session.user_id,
+            post_id: req.body.post_id
+        }).then(dbCommentData => {
+            return res.json(dbCommentData);
+        }).catch(err => {
+            console.log(err);
+            req.statusCode(400).json(err);
+        })
+    }
 });
 
 // ===== DELETE a comment =====

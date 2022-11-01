@@ -79,13 +79,18 @@ router.post('/', (req, res) => {
 // HAS TO BE DEFINED BEFORE /:id SO EXPRESS DOESN'T THINK THAT THIS IS A PART OF /:id ROUTE!
 // to simplify the code here we created a model method in Post class
 router.put('/upvote', (req, res) => {
-    Post.upvote(req.body, { Vote })
-        .then(updatedPostData => {
-            return res.json(updatedPostData)
+    // confirm the session exists = user is logged in
+    if(req.session) {
+        // pass the session id with all destructured properties on req.body
+        Post.upvote({ ...req.body, user_id: req.session.user_id }, { Vote, Comment, User })
+        .then(updatedVoteData => {
+            return res.json(updatedVoteData)
         }).catch(err => {
             console.log(err);
             res.status(500).json(err);
         });
+    }
+    
 });
 
 
