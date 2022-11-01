@@ -55,12 +55,57 @@ router.post('/', (req, res) => {
         username: req.body.username,
         email: req.body.email,
         password: req.body.password
-    }).then(dbUserData => res.json(dbUserData))
+    }).then(dbUserData => {
+        req.session.save(() => {
+            req.session.user_id = dbUserData.id;
+            req.session.username = dbUserData.username;
+            req.session.loggedIn = true;
+            res.json(dbUserData);
+        });
+    })
       .catch(err => {
         console.log(err);
         res.status(500).json(err);
       });
 });
+
+// ===== LOGIN ROUT =====
+router.post('/login', (req, res) => {
+    User.findOne({
+        where: {
+            email: req.body.email
+        }
+    }).then(dbUserData => {
+        if(!dbUserData) {
+            res.status(400).json({message: 'no user found with this email'});
+            return;
+        }
+        const validPassword = dbUserData.checkPassword(req.body.password);
+        if(!validPassword) {
+            res.status(400).json({message: 'incorrect password!'});
+            return;
+        }
+        req.session.save(() => {
+            // declare session variables
+            req.session.user_id = dbUserData.id;
+            req.session.username = dbUserData.username;
+            req.session.loggedIn = true;
+            res.json({user: dbUserData, message: 'you are now logged in!'});
+        });
+    });
+});
+
+// ===== LOGOUT & destroy the session =====
+router.post('/logout', (req, res) => {
+    // use destroy() method to clear the session
+    if(req.session.loggedIn) {
+        req.session.destroy(() => {
+            res.status(204).end();
+        });
+    } else {
+        res.status(404).end();
+    }
+})
 
 // ===== UPDATE a user => /api/users/id =====
 router.put('/:id', (req, res) => {
@@ -81,26 +126,6 @@ router.put('/:id', (req, res) => {
     });
 });
 
-// ===== LOGIN ROUT =====
-router.post('/login', (req, res) => {
-    User.findOne({
-        where: {
-            email: req.body.email
-        }
-    }).then(dbUserData => {
-        if(!dbUserData) {
-            res.status(400).json({message: 'no user found with this email'});
-            return;
-        }
-        const validPassword = dbUserData.checkPassword(req.body.password);
-        if(!validPassword) {
-            res.status(400).json({message: 'incorrect password!'});
-            return;
-        }
-        res.json({user: dbUserData, message: 'you qre now logged in!'});
-    });
-});
-
 // ===== DELETE a user=> /api/users/id =====
 router.delete('/:id', (req, res) => {
     User.destroy({
@@ -116,6 +141,7 @@ router.delete('/:id', (req, res) => {
         res.status(500).json(err);
     });
 });
+
 
 
 module.exports = router;
