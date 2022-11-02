@@ -1,0 +1,25 @@
+<!-- since single-post and homepage pages had the same <article> element, you  used post-info partial template to place that <article> element and now yo simply 'call' it here instead of repeating the code-->
+{{> post-info post}}
+
+
+<!-- wrap the whole comment form into #if helper to conditionally render the form only to loggedIn users -->
+{{#if loggedIn}}
+<form class="comment-form">
+    <div>
+        <textarea name="comment-body"></textarea>
+    </div>
+
+    <div>
+        <button type="submit">add comment</button>
+        <button type="button" class="upvote-btn">upvote</button>
+    </div>
+</form>
+{{/if}}
+
+{{> comments post.comments}}
+
+<!-- since the users who aren't logged in cannot vote or post comments you don't even need to load those resources, so make them conditional too -->
+{{#if loggedIn}}
+<script src="/javascript/comment.js"></script>
+<script src="/javascript/upvote.js"></script>
+{{/if}}
