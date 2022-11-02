@@ -36,7 +36,7 @@ async function loginFormHandler(event) {
         });
         if(response.ok) {
             //once the user is successfully logged in they're redirected to the homepage
-            document.location.replace('/');
+            document.location.replace('/dashboard');
         } else {
             alert(response.statusText);
         }

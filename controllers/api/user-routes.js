@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const {User, Post, Vote, Comment} = require('../../models');
+const withAuth = require('../../utils/auth')
 
 // ===== GET all users => /api/users =====
 router.get('/', (req, res) => {
@@ -49,7 +50,7 @@ router.get('/:id', (req, res) => {
 });
 
 // ===== POST a new user => api/users/ =====
-router.post('/', (req, res) => {
+router.post('/', withAuth, (req, res) => {
     // expected {username: 'potato', email: 'potato@gmail.com', password: 'potato123'} same as INSERT INTO users (username, email, password) VALUES ('potato', 'potato@gmail.com', 'potato123')
     User.create({
         username: req.body.username,
@@ -108,7 +109,7 @@ router.post('/logout', (req, res) => {
 })
 
 // ===== UPDATE a user => /api/users/id =====
-router.put('/:id', (req, res) => {
+router.put('/:id', withAuth, (req, res) => {
     // expected {username: 'potato', email: 'potato@gmail.com', password: 'potato123'} same as UPDATE users SET username='potato', email = 'potato@gmail.com', password = 'potato123' WHERE id=?;
     // if req.body has exact key/value pairs to match the model, you can just use 'req.body' 
     User.update(req.body, {
@@ -127,7 +128,7 @@ router.put('/:id', (req, res) => {
 });
 
 // ===== DELETE a user=> /api/users/id =====
-router.delete('/:id', (req, res) => {
+router.delete('/:id', withAuth, (req, res) => {
     User.destroy({
         where: { id:req.params.id }
     }).then(dbUserData => {

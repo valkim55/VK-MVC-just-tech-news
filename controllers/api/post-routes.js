@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const { json } = require('sequelize');
 const {Post, User, Vote, Comment} = require('../../models');
+const withAuth = require('../../utils/auth');
 
 // importing database connection to get special functionality for PUT vote request
 const sequelize = require('../../config/connection');
@@ -62,11 +63,11 @@ router.get('/:id', (req, res) => {
 });
 
 // ===== POST a new post =====
-router.post('/', (req, res) => {
+router.post('/', withAuth, (req, res) => {
     Post.create({
         title: req.body.title,
         post_url: req.body.post_url,
-        user_id: req.body.user_id 
+        user_id: req.session.user_id 
     }).then(dbPostData => res.json(dbPostData))
       .catch(err => {
         console.log(err);
@@ -78,7 +79,7 @@ router.post('/', (req, res) => {
 // ===== another PUT route for adding a vote! =====
 // HAS TO BE DEFINED BEFORE /:id SO EXPRESS DOESN'T THINK THAT THIS IS A PART OF /:id ROUTE!
 // to simplify the code here we created a model method in Post class
-router.put('/upvote', (req, res) => {
+router.put('/upvote', withAuth, (req, res) => {
     // confirm the session exists = user is logged in
     if(req.session) {
         // pass the session id with all destructured properties on req.body
@@ -96,7 +97,7 @@ router.put('/upvote', (req, res) => {
 
 
 // ===== UPDATE a post's title =====
-router.put('/:id', (req, res) => {
+router.put('/:id', withAuth, (req, res) => {
     // because you're updating an already existing entry, you need to first retrieve the post instance by id and then alter the value of the title
     Post.update({
         title: req.body.title
@@ -118,7 +119,7 @@ router.put('/:id', (req, res) => {
 });
 
 // ===== DELETE an instance of a post ======
-router.delete('/:id', (req, res) => {
+router.delete('/:id', withAuth, (req, res) => {
     Post.destroy({
         where: {id: req.params.id}
     }).then(dbPostData => {
