@@ -3,7 +3,8 @@ async function commentFormHandler(event) {
     // to post a new comment into Comment model(table) you need values for comment text, post_id and user_id columns
     // again, you'll access user_id from the loggedIn session and post_id from URL
     const comment_text = document.querySelector('textarea[name="comment-body"]').value.trim();
-    const post_id = window.location.toString().split('/')[window.location.toString().split('/'.length-1)];
+    const post_id = window.location.toString().split('/')[window.location.toString().split('/').length-1];
+    
     if(comment_text) {
         const response = await fetch('/api/comments', {
             method: 'post',
@@ -12,7 +13,6 @@ async function commentFormHandler(event) {
         });
 
         if(response.ok) {
-            console.log(post_id, comment_text, 'new comment has been posted');
             document.location.reload();
         } else {
             alert(response.statusTExt);
