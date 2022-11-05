@@ -52,7 +52,7 @@ router.get('/:id', (req, res) => {
 });
 
 // ===== POST a new user => api/users/ =====
-router.post('/', withAuth, (req, res) => {
+router.post('/', (req, res) => {
     // expected {username: 'potato', email: 'potato@gmail.com', password: 'potato123'} same as INSERT INTO users (username, email, password) VALUES ('potato', 'potato@gmail.com', 'potato123')
     User.create({
         username: req.body.username,
@@ -72,7 +72,7 @@ router.post('/', withAuth, (req, res) => {
       });
 });
 
-// ===== LOGIN ROUT =====
+// ===== LOGIN ROUTE =====
 router.post('/login', (req, res) => {
     User.findOne({
         where: {
